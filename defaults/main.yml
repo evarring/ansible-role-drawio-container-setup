@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT-0
+---
+# defaults file for drawio_container_setup
+
+# https://github.com/jgraph/docker-drawio/blob/dev/self-contained/README.md
+
+drawio_container_setup_name: drawio
+drawio_container_setup_networks:
+  - name: drawio
+
+drawio_container_setup_image: jgraph/drawio:latest
+drawio_container_setup_dir: /srv/drawio
+
+drawio_container_setup_recreate: false
+drawio_container_setup_privileged: false
+drawio_container_setup_restart_policy: unless-stopped
+
+drawio_container_setup_labels:
+  traefik.enable: "false"
+
+drawio_container_setup_cpus: 0.5
+drawio_container_setup_memory: 1G
+
+drawio_container_setup_env:
+  DRAWIO_SERVER_URL: "https://sub.domain.com/"
+  DRAWIO_BASE_URL: "https://sub.domain.com"
+# DRAWIO_CSP_HEADER: (Optional) Your website Content-Security-Policy if you want to customize it.
+# DRAWIO_VIEWER_URL: (Optional) If you want to host a draw.io viewer also, set the viewer URL. For example, https://drawio.example.com/js/viewer.min.js
+# DRAWIO_LIGHTBOX_URL: (Optional) If you want to host a draw.io viewer also, set the lightbox URL. For example, https://drawio.example.com
+# DRAWIO_CONFIG: (Optional) draw.io configuration JSON. Documentation
+# DRAWIO_USE_HTTP: (Optional and INSECURE) If your setup uses http only and you understand the risks
+# (for example, sending OAuth tokens over http), set DRAWIO_USE_HTTP=1. Caution: Use at your own risk.
+# DRAWIO_GOOGLE_CLIENT_ID:
+# DRAWIO_GOOGLE_CLIENT_SECRET:
+# DRAWIO_GOOGLE_APP_ID:
+# DRAWIO_GOOGLE_VIEWER_CLIENT_ID:
+# DRAWIO_GOOGLE_VIEWER_CLIENT_SECRET:
+# DRAWIO_GOOGLE_VIEWER_APP_ID:
+# DRAWIO_MSGRAPH_CLIENT_ID:
+# DRAWIO_MSGRAPH_CLIENT_SECRET:
+# DRAWIO_MSGRAPH_TENANT_ID:

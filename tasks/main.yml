@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for drawio_container_setup
+
+- name: Pull the configured image if they haven't already and stop containers if changed
+  notify: Stop container
+  block:
+    - name: Pull the configured image if hasn't already
+      community.docker.docker_image:
+        name: "{{ drawioimage_item }}"
+        source: pull
+      loop:
+        - "{{ drawio_container_setup_image }}"
+      loop_control:
+        loop_var: drawioimage_item
+      register: drawio_image_pull_result
+
+    - name: Flush handlers immediately
+      ansible.builtin.meta: flush_handlers
+      when: drawio_image_pull_result.changed # noqa: no-handler
+
+- name: Ensure drawio container is stopped when recreating
+  when: drawio_container_setup_recreate
+  block:
+    - name: Notify the handler
+      ansible.builtin.debug:
+        msg: "Stopping container for recreation"
+      notify: Stop container
+      changed_when: true
+
+    - name: Flush handlers immediately
+      ansible.builtin.meta: flush_handlers
+
+- name: Ensure drawio container volume directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0744'
+    owner: "{{ ansible_user | default(root) }}"
+    group: "{{ ansible_user | default(root) }}"
+  loop:
+    - "{{ drawio_container_setup_dir }}/letsencrypt-log"
+    - "{{ drawio_container_setup_dir }}/letsencrypt-etc"
+    - "{{ drawio_container_setup_dir }}/letsencrypt-lib"
+  become: true
+
+- name: Create networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+  loop: "{{ drawio_container_setup_networks }}"
+  become: true
+
+- name: Create drawio container
+  community.docker.docker_container:
+    name: "{{ drawio_container_setup_name }}"
+    image: "{{ drawio_container_setup_image }}"
+    state: "{{ drawio_container_setup_state | default('started') }}"
+    network_mode: "{{ drawio_container_setup_network_mode }}"
+    networks: "{{ drawio_container_setup_networks }}"
+    cpus: "{{ drawio_container_setup_cpus }}"
+    memory: "{{ drawio_container_setup_memory }}"
+    healthcheck: "{{ drawio_container_setup_healthcheck | default(omit) }}"
+    recreate: "{{ drawio_container_setup_recreate }}"
+    privileged: "{{ drawio_container_setup_privileged }}"
+    ports: "{{ drawio_container_setup_ports | default(omit) }}"
+    volumes:
+      - "{{ drawio_container_setup_dir }}/letsencrypt-log/:/var/log/letsencrypt/:rw,Z"
+      - "{{ drawio_container_setup_dir }}/letsencrypt-etc/:/etc/letsencrypt/:rw,Z"
+      - "{{ drawio_container_setup_dir }}/letsencrypt-lib/:/var/lib/letsencrypt/:rw,Z"
+    env: "{{ drawio_container_setup_env | default(omit) }}"
+    labels: "{{ drawio_container_setup_labels }}"
+    restart_policy: "{{ drawio_container_setup_restart_policy }}"
+
+- name: Enable linger for user {{ ansible_user | default('root') }}
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/loginctl
+      - enable-linger
+      - "{{ ansible_user | default('root') }}"
+    creates: "/var/lib/systemd/linger/{{ ansible_user | default('root') }}"
+  become: true
+  when: ansible_virtualization_type != "container"

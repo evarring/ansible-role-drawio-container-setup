@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT-0
+---
+# handlers file for drawio_container_setup
+
+- name: Stop container
+  community.docker.docker_container:
+    name: "{{ drawioname_item }}"
+    state: "stopped"
+  loop:
+    - "{{ drawio_container_setup_name }}"
+  loop_control:
+    loop_var: drawioname_item
